@@ -40,12 +40,13 @@ module.exports = async callback => {
     console.log(this.length.toString())
     console.log(await rpg.address)
     index = 0
-    while (index < length) {
+    while (index <= length) {
         console.log('Let\'s get the overview of your character ' + index + ' of ' + length)
         let characterMetadata = metadataTemple
         let characterOverview = await rpg.characters(index)
         index++
         characterMetadata['name'] = characterOverview['name']
+        console.log(characterMetadata['name'])
         characterMetadata['image'] = image_uri[characterOverview['class']]
         if (fs.existsSync('metadata/' + characterMetadata['name'].toLowerCase().replace(/\s/g, '-') + '.json')) {
             console.log('test')
@@ -56,7 +57,7 @@ module.exports = async callback => {
         characterMetadata['attributes'][2]['value'] = characterOverview['constitution'].toNumber()
         characterMetadata['attributes'][3]['value'] = characterOverview['dexterity'].toNumber()
         characterMetadata['attributes'][4]['value'] = characterOverview['intelligence'].toNumber()
-        console.log(characterMetadata)
+        console.log(JSON.stringify(characterMetadata))
         filename = 'metadata/' + characterMetadata['name'].toLowerCase().replace(/\s/g, '-')
         let data = JSON.stringify(characterMetadata)
         fs.writeFileSync(filename + '.json', data)

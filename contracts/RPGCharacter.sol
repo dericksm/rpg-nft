@@ -28,7 +28,6 @@ contract RPGCharacter is ERC721, VRFConsumerBase, Ownable {
 
     uint256 private maxLevel;
     uint256 private statusPointsPerLevel;
-    uint256 private characterAvailablePoints;
 
     enum Class {
         ARCHER,
@@ -56,9 +55,6 @@ contract RPGCharacter is ERC721, VRFConsumerBase, Ownable {
         Class class
     );
 
-    event numberCreated(uint number);
-    event requestCreated(bytes32 number);
-
     constructor(
         address _VRFCoordinator,
         address _LinkToken,
@@ -82,52 +78,35 @@ contract RPGCharacter is ERC721, VRFConsumerBase, Ownable {
             requestIdToCharacterName[requestId] = name;
             requestIdToSender[requestId] = msg.sender;
             return requestId;
-    }
+    }    
 
-    function setWarriorStatus(uint256 randomNumber, bytes32 requestId) internal {
-        uint256 level = (randomNumber % maxLevel) + 1;
-        characterAvailablePoints = level * statusPointsPerLevel;
-        string memory name = requestIdToCharacterName[requestId];
-        uint256 strength = getCalculatedRandomStatus(randomNumber);
-        uint256 constitution = getCalculatedRandomStatus(randomNumber);
-        uint256 dexterity = getCalculatedRandomStatus(randomNumber);
-        uint256 intelligence = getCalculatedRandomStatus(randomNumber);    
-        Class class = Class(randomNumber % 3);
-
-
-        Character memory character = Character(level, strength, constitution, dexterity, intelligence, name, class);
-        emit newCharacter(level, strength, constitution, dexterity, intelligence, name, class);
+    function getCalculatedRandomStatus(uint256 randomNumber, uint256 characterAvailablePoints) private pure returns (uint256){
+        uint256 statusPoints = (randomNumber % characterAvailablePoints) + 1;
+        return statusPoints;
     }
     
     function fulfillRandomness(bytes32 requestId, uint256 randomNumber)
         internal
         override
         {
-        emit numberCreated(randomNumber);
         address owner = requestIdToSender[requestId];
         uint256 tokenId = characters.length;
         requestIdToTokenId[requestId] = tokenId;
 
         string memory name = requestIdToCharacterName[requestId];
         uint256 level = (randomNumber % maxLevel) + 1;
-        characterAvailablePoints = level * statusPointsPerLevel;
+        uint256 characterAvailablePoints = level * statusPointsPerLevel;
 
-        uint256 strength = getCalculatedRandomStatus(randomNumber);
-        uint256 constitution = getCalculatedRandomStatus(randomNumber);
-        uint256 dexterity = getCalculatedRandomStatus(randomNumber);
-        uint256 intelligence = getCalculatedRandomStatus(randomNumber);    
+        uint256 strength = getCalculatedRandomStatus(randomNumber, characterAvailablePoints);
+        uint256 constitution = getCalculatedRandomStatus(randomNumber, characterAvailablePoints);
+        uint256 dexterity = getCalculatedRandomStatus(randomNumber, characterAvailablePoints);
+        uint256 intelligence = getCalculatedRandomStatus(randomNumber, characterAvailablePoints);    
         Class class = Class(randomNumber % 3);
 
         Character memory character = Character(level, strength, constitution, dexterity, intelligence, name, class);
         emit newCharacter(level, strength, constitution, dexterity, intelligence, name, class);
         characters.push(character);
         _safeMint(owner, tokenId);
-    }
-
-    function getCalculatedRandomStatus(uint256 randomNumber) private returns (uint256){
-        uint256 statusPoints = (randomNumber % characterAvailablePoints) + 1;
-        characterAvailablePoints = characterAvailablePoints - statusPoints;
-        return statusPoints;
     }
 
     function setTokenURI(uint256 tokenId, string memory _tokenURI) public onlyOwner {

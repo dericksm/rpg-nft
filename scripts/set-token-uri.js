@@ -17,6 +17,7 @@ module.exports = async (callback) => {
   index = 0
   while (index < length) {
     const character = await rpg.characters(index)
+    console.log(character)
     fileName = character['name'].toLowerCase().replace(/\s/g, '-') + '.json'
     curr = filesUploaded.filter((fl) => fl.path == fileName)[0]
     fileHash = curr['cid'].toString()
